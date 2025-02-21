@@ -11,4 +11,5 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server běží na portu ${PORT}`);
+    console.log("Aplikace byla restartována.");
 });
