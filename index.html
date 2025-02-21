@@ -16,7 +16,7 @@
     <h1>Správa dokumentů</h1>
     
     <h2>Přidat nový dokument</h2>
-    <form id="documentForm">
+    <form id="documentForm" enctype="multipart/form-data">
         <label for="name">Název dokumentu:</label>
         <input type="text" id="name" required><br><br>
         
@@ -42,6 +42,9 @@
         </select>
         <br><br>
         
+        <label for="file">Přiložit soubor:</label>
+        <input type="file" id="file" required><br><br>
+        
         <button type="submit">Přidat dokument</button>
     </form>
     
@@ -56,6 +59,7 @@
                 <th>Číslo akce</th>
                 <th>E-mail</th>
                 <th>Upozornění</th>
+                <th>Soubor</th>
                 <th>Akce</th>
             </tr>
         </thead>
@@ -77,8 +81,17 @@
             const actionNumber = document.getElementById('actionNumber').value;
             const email = document.getElementById('email').value;
             const notification = document.getElementById('notification').value;
+            const fileInput = document.getElementById('file');
             
-            const documentData = { name, expiry, type, issuer, actionNumber, email, notification };
+            if (fileInput.files.length === 0) {
+                alert("Vyberte soubor!");
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const fileURL = URL.createObjectURL(file);
+            
+            const documentData = { name, expiry, type, issuer, actionNumber, email, notification, fileURL };
             const documents = JSON.parse(localStorage.getItem("documents")) || [];
             documents.push(documentData);
             localStorage.setItem("documents", JSON.stringify(documents));
@@ -90,7 +103,7 @@
         function addDocumentToTable(documentData) {
             const table = document.getElementById('documentList');
             const row = table.insertRow();
-            row.innerHTML = `<td>${documentData.name}</td><td>${documentData.expiry}</td><td>${documentData.type}</td><td>${documentData.issuer}</td><td>${documentData.actionNumber}</td><td>${documentData.email}</td><td>${documentData.notification} měsíce</td><td><span class="delete-btn">Smazat</span></td>`;
+            row.innerHTML = `<td>${documentData.name}</td><td>${documentData.expiry}</td><td>${documentData.type}</td><td>${documentData.issuer}</td><td>${documentData.actionNumber}</td><td>${documentData.email}</td><td>${documentData.notification} měsíce</td><td><a href="${documentData.fileURL}" target="_blank">Zobrazit</a></td><td><span class="delete-btn">Smazat</span></td>`;
             
             row.querySelector(".delete-btn").addEventListener("click", function() {
                 row.remove();
