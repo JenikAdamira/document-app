@@ -9,6 +9,7 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; cursor: pointer; }
         th { background-color: #f4f4f4; }
+        .delete-btn { color: red; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -31,8 +32,15 @@
         <label for="actionNumber">Číslo akce:</label>
         <input type="text" id="actionNumber" required><br><br>
         
-        <label for="documentFile">Přiložit soubor:</label>
-        <input type="file" id="documentFile" required><br><br>
+        <label for="email">E-mail pro upozornění:</label>
+        <input type="email" id="email" required><br><br>
+        
+        <label for="notification">Upozornění před vypršením:</label>
+        <select id="notification">
+            <option value="2">2 měsíce</option>
+            <option value="3">3 měsíce</option>
+        </select>
+        <br><br>
         
         <button type="submit">Přidat dokument</button>
     </form>
@@ -41,12 +49,14 @@
     <table>
         <thead>
             <tr>
-                <th onclick="sortTable(0)">Název</th>
-                <th onclick="sortTable(1)">Datum platnosti</th>
-                <th onclick="sortTable(2)">Typ</th>
-                <th onclick="sortTable(3)">Vydal</th>
-                <th onclick="sortTable(4)">Číslo akce</th>
-                <th>Dokument</th>
+                <th>Název</th>
+                <th>Datum platnosti</th>
+                <th>Typ</th>
+                <th>Vydal</th>
+                <th>Číslo akce</th>
+                <th>E-mail</th>
+                <th>Upozornění</th>
+                <th>Akce</th>
             </tr>
         </thead>
         <tbody id="documentList">
@@ -65,17 +75,10 @@
             const type = document.getElementById('type').value;
             const issuer = document.getElementById('issuer').value;
             const actionNumber = document.getElementById('actionNumber').value;
-            const fileInput = document.getElementById('documentFile');
+            const email = document.getElementById('email').value;
+            const notification = document.getElementById('notification').value;
             
-            if (fileInput.files.length === 0) {
-                alert("Vyberte soubor!");
-                return;
-            }
-            
-            const file = fileInput.files[0];
-            const fileURL = URL.createObjectURL(file);
-            
-            const documentData = { name, expiry, type, issuer, actionNumber, fileURL };
+            const documentData = { name, expiry, type, issuer, actionNumber, email, notification };
             const documents = JSON.parse(localStorage.getItem("documents")) || [];
             documents.push(documentData);
             localStorage.setItem("documents", JSON.stringify(documents));
@@ -87,7 +90,12 @@
         function addDocumentToTable(documentData) {
             const table = document.getElementById('documentList');
             const row = table.insertRow();
-            row.innerHTML = `<td>${documentData.name}</td><td>${documentData.expiry}</td><td>${documentData.type}</td><td>${documentData.issuer}</td><td>${documentData.actionNumber}</td><td><a href="${documentData.fileURL}" target="_blank">Zobrazit</a></td>`;
+            row.innerHTML = `<td>${documentData.name}</td><td>${documentData.expiry}</td><td>${documentData.type}</td><td>${documentData.issuer}</td><td>${documentData.actionNumber}</td><td>${documentData.email}</td><td>${documentData.notification} měsíce</td><td><span class="delete-btn">Smazat</span></td>`;
+            
+            row.querySelector(".delete-btn").addEventListener("click", function() {
+                row.remove();
+                removeFromLocalStorage(documentData);
+            });
         }
         
         function loadDocuments() {
@@ -95,17 +103,10 @@
             documents.forEach(addDocumentToTable);
         }
         
-        function sortTable(columnIndex) {
-            const table = document.querySelector("table tbody");
-            const rows = Array.from(table.rows);
-            const sortedRows = rows.sort((a, b) => {
-                const aText = a.cells[columnIndex].textContent.trim();
-                const bText = b.cells[columnIndex].textContent.trim();
-                return aText.localeCompare(bText, 'cs', { numeric: true });
-            });
-            
-            table.innerHTML = "";
-            sortedRows.forEach(row => table.appendChild(row));
+        function removeFromLocalStorage(documentData) {
+            let documents = JSON.parse(localStorage.getItem("documents")) || [];
+            documents = documents.filter(doc => doc.name !== documentData.name || doc.expiry !== documentData.expiry);
+            localStorage.setItem("documents", JSON.stringify(documents));
         }
     </script>
 </body>
