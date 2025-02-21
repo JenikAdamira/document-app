@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Správa dokumentů</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; cursor: pointer; }
+        th { background-color: #f4f4f4; }
+    </style>
+</head>
+<body>
+    <h1>Správa dokumentů</h1>
+    
+    <h2>Přidat nový dokument</h2>
+    <form id="documentForm">
+        <label for="name">Název dokumentu:</label>
+        <input type="text" id="name" required><br><br>
+        
+        <label for="expiry">Datum platnosti:</label>
+        <input type="date" id="expiry" required><br><br>
+        
+        <label for="type">Typ dokumentu:</label>
+        <input type="text" id="type" required><br><br>
+        
+        <label for="issuer">Vydal:</label>
+        <input type="text" id="issuer" required><br><br>
+        
+        <label for="actionNumber">Číslo akce:</label>
+        <input type="text" id="actionNumber" required><br><br>
+        
+        <label for="documentFile">Přiložit soubor:</label>
+        <input type="file" id="documentFile" required><br><br>
+        
+        <button type="submit">Přidat dokument</button>
+    </form>
+    
+    <h2>Seznam dokumentů</h2>
+    <table>
+        <thead>
+            <tr>
+                <th onclick="sortTable(0)">Název</th>
+                <th onclick="sortTable(1)">Datum platnosti</th>
+                <th onclick="sortTable(2)">Typ</th>
+                <th onclick="sortTable(3)">Vydal</th>
+                <th onclick="sortTable(4)">Číslo akce</th>
+                <th>Dokument</th>
+            </tr>
+        </thead>
+        <tbody id="documentList">
+            <!-- Seznam dokumentů se zobrazí zde -->
+        </tbody>
+    </table>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", loadDocuments);
+        
+        document.getElementById('documentForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const expiry = document.getElementById('expiry').value;
+            const type = document.getElementById('type').value;
+            const issuer = document.getElementById('issuer').value;
+            const actionNumber = document.getElementById('actionNumber').value;
+            const fileInput = document.getElementById('documentFile');
+            
+            if (fileInput.files.length === 0) {
+                alert("Vyberte soubor!");
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const fileURL = URL.createObjectURL(file);
+            
+            const documentData = { name, expiry, type, issuer, actionNumber, fileURL };
+            const documents = JSON.parse(localStorage.getItem("documents")) || [];
+            documents.push(documentData);
+            localStorage.setItem("documents", JSON.stringify(documents));
+            
+            addDocumentToTable(documentData);
+            document.getElementById('documentForm').reset();
+        });
+        
+        function addDocumentToTable(documentData) {
+            const table = document.getElementById('documentList');
+            const row = table.insertRow();
+            row.innerHTML = `<td>${documentData.name}</td><td>${documentData.expiry}</td><td>${documentData.type}</td><td>${documentData.issuer}</td><td>${documentData.actionNumber}</td><td><a href="${documentData.fileURL}" target="_blank">Zobrazit</a></td>`;
+        }
+        
+        function loadDocuments() {
+            const documents = JSON.parse(localStorage.getItem("documents")) || [];
+            documents.forEach(addDocumentToTable);
+        }
+        
+        function sortTable(columnIndex) {
+            const table = document.querySelector("table tbody");
+            const rows = Array.from(table.rows);
+            const sortedRows = rows.sort((a, b) => {
+                const aText = a.cells[columnIndex].textContent.trim();
+                const bText = b.cells[columnIndex].textContent.trim();
+                return aText.localeCompare(bText, 'cs', { numeric: true });
+            });
+            
+            table.innerHTML = "";
+            sortedRows.forEach(row => table.appendChild(row));
+        }
+    </script>
+</body>
+</html>
